@@ -12,6 +12,8 @@ class CalculadoraPropostaCompleta:
             st.session_state.fatores = {}
         if 'resultados' not in st.session_state:
             st.session_state.resultados = {}
+        if 'beneficios_detalhados' not in st.session_state:
+            st.session_state.beneficios_detalhados = {}
         
     @property
     def fatores(self):
@@ -21,6 +23,14 @@ class CalculadoraPropostaCompleta:
     def fatores(self, value):
         st.session_state.fatores = value
         
+    @property
+    def beneficios_detalhados(self):
+        return st.session_state.beneficios_detalhados
+    
+    @beneficios_detalhados.setter
+    def beneficios_detalhados(self, value):
+        st.session_state.beneficios_detalhados = value
+        
     def coletar_dados_atual(self):
         """Coleta informações sobre a situação atual"""
         st.header("📊 Situação Atual")
@@ -28,7 +38,6 @@ class CalculadoraPropostaCompleta:
         col1, col2 = st.columns(2)
         
         with col1:
-            # Usar chaves únicas para cada input
             self.fatores['salario_atual'] = st.number_input(
                 "Salário atual bruto mensal (R$)", 
                 min_value=0.0, 
@@ -36,13 +45,61 @@ class CalculadoraPropostaCompleta:
                 step=100.0,
                 key="salario_atual_input"
             )
-            self.fatores['beneficios_atual'] = st.number_input(
-                "Valor dos benefícios (VR, VT, plano saúde, etc.) mensal (R$)", 
+            
+            # Benefícios detalhados
+            st.subheader("💼 Benefícios Atuais (Mensais)")
+            
+            self.beneficios_detalhados['va_vr'] = st.number_input(
+                "VA/VR (R$)", 
                 min_value=0.0, 
-                value=float(self.fatores.get('beneficios_atual', 1000.0)), 
-                step=100.0,
-                key="beneficios_atual_input"
+                value=float(self.beneficios_detalhados.get('va_vr', 600.0)), 
+                step=50.0,
+                key="va_vr_input"
             )
+            
+            self.beneficios_detalhados['vt'] = st.number_input(
+                "Vale Transporte (R$)", 
+                min_value=0.0, 
+                value=float(self.beneficios_detalhados.get('vt', 300.0)), 
+                step=50.0,
+                key="vt_input"
+            )
+            
+            self.beneficios_detalhados['plano_saude'] = st.checkbox(
+                "Plano de Saúde",
+                value=bool(self.beneficios_detalhados.get('plano_saude', True)),
+                key="plano_saude_check"
+            )
+            
+            if self.beneficios_detalhados['plano_saude']:
+                self.beneficios_detalhados['coparticipacao'] = st.number_input(
+                    "Coparticipação mensal (R$)", 
+                    min_value=0.0, 
+                    value=float(self.beneficios_detalhados.get('coparticipacao', 200.0)), 
+                    step=50.0,
+                    key="coparticipacao_input"
+                )
+            else:
+                self.beneficios_detalhados['coparticipacao'] = 0
+            
+            self.beneficios_detalhados['outros_beneficios'] = st.number_input(
+                "Outros benefícios (R$)", 
+                min_value=0.0, 
+                value=float(self.beneficios_detalhados.get('outros_beneficios', 0.0)), 
+                step=50.0,
+                key="outros_beneficios_input"
+            )
+            
+            # Calcular total de benefícios
+            total_beneficios = (self.beneficios_detalhados['va_vr'] + 
+                              self.beneficios_detalhados['vt'] + 
+                              self.beneficios_detalhados['coparticipacao'] + 
+                              self.beneficios_detalhados['outros_beneficios'])
+            
+            self.fatores['beneficios_atual'] = total_beneficios
+            st.info(f"**Total benefícios:** R$ {total_beneficios:,.2f}")
+            
+        with col2:
             self.fatores['bonus_atual'] = st.number_input(
                 "Bônus/PLR anual (R$)", 
                 min_value=0.0, 
@@ -51,7 +108,6 @@ class CalculadoraPropostaCompleta:
                 key="bonus_atual_input"
             )
             
-        with col2:
             self.fatores['ferias_atual'] = st.number_input(
                 "Dias de férias atuais", 
                 min_value=10, 
@@ -59,13 +115,14 @@ class CalculadoraPropostaCompleta:
                 value=int(self.fatores.get('ferias_atual', 30)),
                 key="ferias_atual_input"
             )
+            
             self.fatores['home_office_atual'] = st.slider(
                 "Dias de home office por semana", 
                 0, 5, 
                 value=int(self.fatores.get('home_office_atual', 2)),
                 key="home_office_atual_input"
             )
-            # CORREÇÃO AQUI: removida a vírgula extra e parâmetro posicional
+            
             self.fatores['tempo_viagem_atual'] = st.slider(
                 "Tempo de deslocamento diário (horas)", 
                 min_value=0.0, 
@@ -74,6 +131,11 @@ class CalculadoraPropostaCompleta:
                 step=0.5,
                 key="tempo_viagem_atual_input"
             )
+            
+            # Resumo da situação atual
+            st.subheader("📋 Resumo Atual")
+            salario_total = self.fatores['salario_atual'] + self.fatores['beneficios_atual']
+            st.metric("Remuneração Total Mensal", f"R$ {salario_total:,.2f}")
     
     def coletar_expectativas(self):
         """Coleta expectativas e informações da nova empresa"""
@@ -140,127 +202,160 @@ class CalculadoraPropostaCompleta:
                 value=int(self.fatores.get('beneficios_qualidade', 7)),
                 key="beneficios_qualidade_input"
             )
+            
+            # Modalidade de contratação
+            st.subheader("📝 Modalidade")
+            self.fatores['modalidade'] = st.selectbox(
+                "Tipo de contratação",
+                ["CLT", "PJ"],
+                index=0 if self.fatores.get('modalidade', 'CLT') == 'CLT' else 1,
+                key="modalidade_input"
+            )
     
     def calcular_impostos_clt(self, salario_bruto):
-        """Calcula impostos CLT conforme legislação 2024"""
-        # INSS 2024 - Faixas atualizadas
-        if salario_bruto <= 1412.00:
-            inss = salario_bruto * 0.075
-        elif salario_bruto <= 2666.68:
-            inss = (1412.00 * 0.075) + ((salario_bruto - 1412.00) * 0.09)
-        elif salario_bruto <= 4000.03:
-            inss = (1412.00 * 0.075) + ((2666.68 - 1412.00) * 0.09) + ((salario_bruto - 2666.68) * 0.12)
-        elif salario_bruto <= 7786.02:
-            inss = (1412.00 * 0.075) + ((2666.68 - 1412.00) * 0.09) + ((4000.03 - 2666.68) * 0.12) + ((salario_bruto - 4000.03) * 0.14)
-        else:
-            inss = 908.85  # Teto do INSS
-        
-        # IRRF 2024 - Faixas atualizadas
-        base_irrf = salario_bruto - inss
-        
-        # Dedução por dependente (R$ 189,59 por dependente)
-        deducao_dependente = 0  # Você pode adicionar dependentes se quiser
-        
-        base_irrf_calculada = base_irrf - deducao_dependente
-        
-        if base_irrf_calculada <= 2259.20:
-            irrf = 0
-        elif base_irrf_calculada <= 2826.65:
-            irrf = (base_irrf_calculada * 0.075) - 169.44
-        elif base_irrf_calculada <= 3751.05:
-            irrf = (base_irrf_calculada * 0.15) - 381.44
-        elif base_irrf_calculada <= 4664.68:
-            irrf = (base_irrf_calculada * 0.225) - 662.77
-        else:
-            irrf = (base_irrf_calculada * 0.275) - 896.00
-        
-        # Garantir que IRRF não seja negativo
-        irrf = max(0, irrf)
-        
-        salario_liquido = salario_bruto - inss - irrf
-        
-        return {
-            'salario_bruto': salario_bruto,
-            'inss': inss,
-            'irrf': irrf,
-            'salario_liquido': salario_liquido,
-            'descontos_totais': inss + irrf,
-            'aliquota_efetiva': ((inss + irrf) / salario_bruto) * 100
-        }
-    
-    def calcular_impostos_pj(self, pro_labore, faturamento_restante):
-        """Calcula impostos para PJ (Simples Nacional)"""
+        """Calcula impostos CLT conforme legislação 2024 - CORRIGIDO"""
         try:
-            # Pro-labore (tratado como salário)
+            # INSS 2024 - Faixas atualizadas e cálculo correto
+            if salario_bruto <= 1412.00:
+                inss = salario_bruto * 0.075
+            elif salario_bruto <= 2666.68:
+                inss = 105.90 + ((salario_bruto - 1412.00) * 0.09)
+            elif salario_bruto <= 4000.03:
+                inss = 105.90 + 113.09 + ((salario_bruto - 2666.68) * 0.12)
+            elif salario_bruto <= 7786.02:
+                inss = 105.90 + 113.09 + 160.00 + ((salario_bruto - 4000.03) * 0.14)
+            else:
+                inss = 908.85  # Teto do INSS
+            
+            # IRRF 2024 - Cálculo correto
+            base_irrf = salario_bruto - inss
+            
+            # Tabela IRRF 2024
+            if base_irrf <= 2259.20:
+                irrf = 0
+            elif base_irrf <= 2826.65:
+                irrf = (base_irrf * 0.075) - 169.44
+            elif base_irrf <= 3751.05:
+                irrf = (base_irrf * 0.15) - 381.44
+            elif base_irrf <= 4664.68:
+                irrf = (base_irrf * 0.225) - 662.77
+            else:
+                irrf = (base_irrf * 0.275) - 896.00
+            
+            # Garantir que IRRF não seja negativo
+            irrf = max(0, irrf)
+            
+            salario_liquido = salario_bruto - inss - irrf
+            
+            return {
+                'salario_bruto': salario_bruto,
+                'inss': inss,
+                'irrf': irrf,
+                'salario_liquido': salario_liquido,
+                'descontos_totais': inss + irrf,
+                'aliquota_efetiva': ((inss + irrf) / salario_bruto) * 100 if salario_bruto > 0 else 0
+            }
+        except Exception as e:
+            st.error(f"Erro cálculo CLT: {e}")
+            return {
+                'salario_bruto': salario_bruto,
+                'inss': 0,
+                'irrf': 0,
+                'salario_liquido': salario_bruto,
+                'descontos_totais': 0,
+                'aliquota_efetiva': 0
+            }
+    
+    def calcular_impostos_pj(self, valor_pj_total):
+        """Calcula impostos para PJ (Simples Nacional) - CORRIGIDO"""
+        try:
+            # Para PJ, consideramos que 40% é pro-labore e 60% é lucro/empresa
+            pro_labore = valor_pj_total * 0.4
+            faturamento_empresa = valor_pj_total * 0.6
+            
+            # Impostos sobre pro-labore (como CLT)
             impostos_pro_labore = self.calcular_impostos_clt(pro_labore)
             
-            # Simples Nacional sobre faturamento (aproximação para serviços)
-            # Anexo III - Serviços
-            faturamento_anual = faturamento_restante * 12
+            # Simples Nacional sobre faturamento da empresa
+            # Anexo III - Serviços (aproximação)
+            faturamento_anual = faturamento_empresa * 12
             
             if faturamento_anual <= 180000:
-                aliquota_simples = 0.06  # 6% aproximadamente para serviços
+                aliquota_simples = 0.06  # 6% para serviços
             elif faturamento_anual <= 360000:
                 aliquota_simples = 0.112
             elif faturamento_anual <= 720000:
                 aliquota_simples = 0.135
             elif faturamento_anual <= 1800000:
                 aliquota_simples = 0.16
-            elif faturamento_anual <= 3600000:
-                aliquota_simples = 0.21
             else:
-                aliquota_simples = 0.33
+                aliquota_simples = 0.21
             
-            imposto_simples = faturamento_restante * aliquota_simples
+            imposto_simples = faturamento_empresa * aliquota_simples
             
-            # Custo contábil mensal estimado
-            custo_contabilidade = 300.0
+            # Custo contábil mensal
+            custo_contabilidade = 200.0
             
-            total_impostos_pj = impostos_pro_labore['descontos_totais'] + imposto_simples + custo_contabilidade
-            renda_liquida_pj = pro_labore + faturamento_restante - total_impostos_pj
+            # Outros custos PJ
+            custo_administrativo = 100.0
+            
+            total_impostos_pj = (impostos_pro_labore['descontos_totais'] + 
+                               imposto_simples + 
+                               custo_contabilidade + 
+                               custo_administrativo)
+            
+            renda_liquida_pj = valor_pj_total - total_impostos_pj
             
             return {
+                'valor_total': valor_pj_total,
                 'pro_labore': pro_labore,
-                'faturamento_restante': faturamento_restante,
+                'faturamento_empresa': faturamento_empresa,
                 'imposto_pro_labore': impostos_pro_labore['descontos_totais'],
                 'imposto_simples': imposto_simples,
                 'custo_contabilidade': custo_contabilidade,
+                'custo_administrativo': custo_administrativo,
                 'total_impostos': total_impostos_pj,
                 'renda_liquida': renda_liquida_pj,
-                'aliquota_efetiva': (total_impostos_pj / (pro_labore + faturamento_restante)) * 100
+                'aliquota_efetiva': (total_impostos_pj / valor_pj_total) * 100 if valor_pj_total > 0 else 0
             }
         except Exception as e:
-            st.error(f"Erro no cálculo PJ: {e}")
+            st.error(f"Erro cálculo PJ: {e}")
             return {
-                'pro_labore': pro_labore,
-                'faturamento_restante': faturamento_restante,
+                'valor_total': valor_pj_total,
+                'pro_labore': 0,
+                'faturamento_empresa': 0,
                 'imposto_pro_labore': 0,
                 'imposto_simples': 0,
                 'custo_contabilidade': 0,
+                'custo_administrativo': 0,
                 'total_impostos': 0,
-                'renda_liquida': pro_labore + faturamento_restante,
+                'renda_liquida': valor_pj_total,
                 'aliquota_efetiva': 0
             }
     
     def comparar_clt_pj(self, valor_clt_bruto, valor_pj_total):
-        """Compara CLT vs PJ considerando todos os fatores"""
+        """Compara CLT vs PJ considerando todos os fatores - CORRIGIDO"""
         try:
             # CLT
             clt = self.calcular_impostos_clt(valor_clt_bruto)
-            clt['ferias'] = valor_clt_bruto
-            clt['decimo_terceiro'] = valor_clt_bruto
-            clt['fgts'] = valor_clt_bruto * 0.08
-            clt['total_anual'] = (clt['salario_liquido'] * 13) + clt['ferias'] + clt['fgts'] * 12
             
-            # PJ (considerando 80% do valor CLT como pro-labore e 20% como lucro)
-            pro_labore = valor_pj_total * 0.8
-            faturamento_restante = valor_pj_total * 0.2
-            pj = self.calcular_impostos_pj(pro_labore, faturamento_restante)
+            # Benefícios CLT (13º, férias, FGTS)
+            decimo_terceiro = valor_clt_bruto
+            ferias = valor_clt_bruto + (valor_clt_bruto / 3)  # Férias + 1/3
+            fgts_anual = valor_clt_bruto * 0.08 * 12
+            
+            clt['total_anual'] = (clt['salario_liquido'] * 13) + ferias + fgts_anual
+            clt['decimo_terceiro'] = decimo_terceiro
+            clt['ferias'] = ferias
+            clt['fgts_anual'] = fgts_anual
+            
+            # PJ
+            pj = self.calcular_impostos_pj(valor_pj_total)
             pj['total_anual'] = pj['renda_liquida'] * 12
             
             return {'CLT': clt, 'PJ': pj}
         except Exception as e:
-            st.error(f"Erro na comparação CLT/PJ: {e}")
+            st.error(f"Erro comparação CLT/PJ: {e}")
             return {'CLT': {}, 'PJ': {}}
     
     def calcular_valor_hora_atual(self):
@@ -270,8 +365,9 @@ class CalculadoraPropostaCompleta:
             beneficios = self.fatores.get('beneficios_atual', 0)
             tempo_viagem = self.fatores.get('tempo_viagem_atual', 0)
             
-            horas_trabalho = 8 * 22  # 8 horas/dia, 22 dias/mês
-            horas_deslocamento = tempo_viagem * 2 * 22  # Ida e volta
+            # 44 horas semanais = 220 horas mensais (44 * 5)
+            horas_trabalho = 220
+            horas_deslocamento = tempo_viagem * 2 * 22  # Ida e volta, 22 dias úteis
             
             horas_totais = horas_trabalho + horas_deslocamento
             
@@ -283,9 +379,9 @@ class CalculadoraPropostaCompleta:
             return 0
     
     def calcular_compensacao_minima(self):
-        """Calcula a compensação mínima aceitável"""
+        """Calcula a compensação mínima aceitável - CORRIGIDO"""
         try:
-            # Salário atual total anual
+            # Salário atual total MENSAL (não anual)
             salario_atual = self.fatores.get('salario_atual', 0)
             beneficios_atual = self.fatores.get('beneficios_atual', 0)
             bonus_atual = self.fatores.get('bonus_atual', 0)
@@ -294,30 +390,30 @@ class CalculadoraPropostaCompleta:
             tempo_viagem_novo = self.fatores.get('tempo_viagem_novo', 0)
             dias_presencial = self.fatores.get('dias_presencial_novo', 0)
             
-            salario_anual_atual = (salario_atual + beneficios_atual) * 13
-            salario_anual_atual += bonus_atual
+            # Remuneração total atual mensal
+            remuneracao_atual_mensal = salario_atual + beneficios_atual
             
-            # Ajuste pelo custo de vida
-            salario_ajustado = salario_anual_atual * (1 + custo_vida)
+            # Ajuste pelo custo de vida (sobre a remuneração atual)
+            remuneracao_ajustada = remuneracao_atual_mensal * (1 + custo_vida)
             
             # Ajuste por qualidade de vida (tempo de deslocamento)
-            tempo_viagem_atual_horas = tempo_viagem_atual * 2 * 22 * 12
-            tempo_viagem_novo_horas = tempo_viagem_novo * 2 * dias_presencial * 4.33 * 12
+            # Considerando valor de R$ 30/hora para tempo livre
+            horas_economizadas_mes = (tempo_viagem_atual - tempo_viagem_novo) * 2 * dias_presencial * 4.33
+            valor_tempo_economizado = horas_economizadas_mes * 30
             
-            diferenca_tempo = tempo_viagem_atual_horas - tempo_viagem_novo_horas
-            # Valor do tempo: considerando R$ 50/hora (valor subjetivo do tempo livre)
-            valor_tempo = diferenca_tempo * 50
+            # Bônus convertido para mensal
+            bonus_mensal = bonus_atual / 12
             
-            compensacao_minima_anual = salario_ajustado - valor_tempo
-            compensacao_minima_mensal = compensacao_minima_anual / 13
+            compensacao_minima_mensal = remuneracao_ajustada + valor_tempo_economizado + bonus_mensal
             
-            return max(compensacao_minima_mensal, salario_atual)  # Não menor que atual
+            return max(compensacao_minima_mensal, remuneracao_atual_mensal)
+            
         except Exception as e:
-            st.error(f"Erro no cálculo da compensação mínima: {e}")
-            return self.fatores.get('salario_atual', 5000)
+            st.error(f"Erro cálculo compensação mínima: {e}")
+            return self.fatores.get('salario_atual', 5000) + self.fatores.get('beneficios_atual', 1000)
     
     def calcular_valor_ideal(self):
-        """Calcula o valor ideal a ser pedido"""
+        """Calcula o valor ideal a ser pedido - CORRIGIDO"""
         try:
             compensacao_minima = self.calcular_compensacao_minima()
             
@@ -325,22 +421,25 @@ class CalculadoraPropostaCompleta:
             estabilidade = self.fatores.get('estabilidade', 5)
             beneficios_qualidade = self.fatores.get('beneficios_qualidade', 5)
             
-            # Fator de crescimento (15-30% acima do mínimo)
-            fator_crescimento = 1.2 + (crescimento / 50)
+            # Fator base de crescimento (20-40% acima do mínimo)
+            fator_base = 1.3
             
-            # Fator de negociação (margem para barganha)
-            fator_negociacao = 1.15
+            # Ajustes por fatores qualitativos
+            ajuste_crescimento = crescimento * 0.02  # 2% por ponto
+            ajuste_estabilidade = estabilidade * 0.015  # 1.5% por ponto
+            ajuste_beneficios = beneficios_qualidade * 0.015  # 1.5% por ponto
             
-            valor_ideal_mensal = compensacao_minima * fator_crescimento * fator_negociacao
+            fator_total = (fator_base + 
+                         ajuste_crescimento + 
+                         ajuste_estabilidade + 
+                         ajuste_beneficios)
             
-            # Ajuste pelos fatores qualitativos
-            fator_qualitativo = (crescimento + estabilidade + beneficios_qualidade) / 30
-            
-            valor_ideal_mensal *= (1 + fator_qualitativo)
+            valor_ideal_mensal = compensacao_minima * fator_total
             
             return valor_ideal_mensal
+            
         except Exception as e:
-            st.error(f"Erro no cálculo do valor ideal: {e}")
+            st.error(f"Erro cálculo valor ideal: {e}")
             return self.calcular_compensacao_minima() * 1.3
     
     def calcular_faixa_recomendada(self):
@@ -349,8 +448,8 @@ class CalculadoraPropostaCompleta:
             minimo = self.calcular_compensacao_minima()
             ideal = self.calcular_valor_ideal()
             
-            # Faixa: mínimo até 20% acima do ideal para negociação
-            maximo = ideal * 1.2
+            # Faixa: mínimo até 25% acima do ideal para negociação
+            maximo = ideal * 1.25
             
             return {
                 'minimo': minimo,
@@ -358,17 +457,18 @@ class CalculadoraPropostaCompleta:
                 'maximo_negociacao': maximo
             }
         except Exception as e:
-            st.error(f"Erro no cálculo da faixa: {e}")
+            st.error(f"Erro cálculo faixa: {e}")
+            salario_base = self.fatores.get('salario_atual', 5000) + self.fatores.get('beneficios_atual', 1000)
             return {
-                'minimo': 5000,
-                'ideal': 6000,
-                'maximo_negociacao': 7000
+                'minimo': salario_base,
+                'ideal': salario_base * 1.3,
+                'maximo_negociacao': salario_base * 1.5
             }
     
     def calcular_equivalencia_pj_clt(self, valor_clt):
         """Calcula valor PJ equivalente ao CLT considerando benefícios"""
-        # CLT tem 13º, férias, FGTS, etc. PJ precisa ser ~30-40% maior
-        fator_equivalencia = 1.35
+        # CLT tem 13º, férias, FGTS, etc. PJ precisa ser ~40-50% maior
+        fator_equivalencia = 1.45
         return valor_clt * fator_equivalencia
     
     def gerar_dashboard(self):
@@ -378,8 +478,11 @@ class CalculadoraPropostaCompleta:
             salario_total_atual = self.fatores.get('salario_atual', 0) + self.fatores.get('beneficios_atual', 0)
             valor_hora_atual = self.calcular_valor_hora_atual()
             
-            # Comparação CLT vs PJ
-            comparacao_clt_pj = self.comparar_clt_pj(faixa['ideal'], self.calcular_equivalencia_pj_clt(faixa['ideal']))
+            # Comparação CLT vs PJ baseada na modalidade selecionada
+            if self.fatores.get('modalidade', 'CLT') == 'CLT':
+                comparacao_clt_pj = self.comparar_clt_pj(faixa['ideal'], self.calcular_equivalencia_pj_clt(faixa['ideal']))
+            else:
+                comparacao_clt_pj = self.comparar_clt_pj(faixa['ideal'] / 1.45, faixa['ideal'])
             
             # Layout do dashboard
             st.markdown("---")
@@ -400,8 +503,12 @@ class CalculadoraPropostaCompleta:
                 st.metric("Horas Economizadas/mês", f"{tempo_economizado:.1f}h")
             
             with col4:
-                liquido_clt = comparacao_clt_pj['CLT'].get('salario_liquido', 0)
-                st.metric("Líquido CLT Ideal", f"R$ {liquido_clt:,.0f}")
+                modalidade = self.fatores.get('modalidade', 'CLT')
+                if modalidade == 'CLT':
+                    liquido = comparacao_clt_pj['CLT'].get('salario_liquido', 0)
+                else:
+                    liquido = comparacao_clt_pj['PJ'].get('renda_liquida', 0)
+                st.metric(f"Líquido {modalidade} Ideal", f"R$ {liquido:,.0f}")
             
             # Abas para diferentes análises
             tab1, tab2, tab3, tab4 = st.tabs(["💰 Valores", "⚖️ CLT vs PJ", "📊 Gráficos", "✅ Checklist"])
@@ -429,10 +536,18 @@ class CalculadoraPropostaCompleta:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.info(f"**Mínimo Aceitável:** R$ {faixa['minimo']:,.2f}")
-            st.info(f"**Valor Ideal CLT:** R$ {faixa['ideal']:,.2f}")
-            st.info(f"**Máximo Negociação:** R$ {faixa['maximo_negociacao']:,.2f}")
-            st.info(f"**Equivalente PJ:** R$ {self.calcular_equivalencia_pj_clt(faixa['ideal']):,.2f}")
+            modalidade = self.fatores.get('modalidade', 'CLT')
+            
+            if modalidade == 'CLT':
+                st.info(f"**Mínimo Aceitável:** R$ {faixa['minimo']:,.2f}")
+                st.info(f"**Valor Ideal CLT:** R$ {faixa['ideal']:,.2f}")
+                st.info(f"**Máximo Negociação:** R$ {faixa['maximo_negociacao']:,.2f}")
+                st.info(f"**Equivalente PJ:** R$ {self.calcular_equivalencia_pj_clt(faixa['ideal']):,.2f}")
+            else:
+                st.info(f"**Mínimo Aceitável:** R$ {self.calcular_equivalencia_pj_clt(faixa['minimo']):,.2f}")
+                st.info(f"**Valor Ideal PJ:** R$ {self.calcular_equivalencia_pj_clt(faixa['ideal']):,.2f}")
+                st.info(f"**Máximo Negociação:** R$ {self.calcular_equivalencia_pj_clt(faixa['maximo_negociacao']):,.2f}")
+                st.info(f"**Equivalente CLT:** R$ {faixa['ideal']:,.2f}")
         
         with col2:
             st.metric("Salário Atual Total", f"R$ {salario_total_atual:,.2f}")
@@ -444,12 +559,15 @@ class CalculadoraPropostaCompleta:
             st.metric("Líquido CLT Ideal", f"R$ {liquido_clt:,.2f}")
             st.metric("Líquido PJ Ideal", f"R$ {liquido_pj:,.2f}")
             
-            # Simulador de negociação - USAR SESSION_STATE
+            # Simulador de negociação
             st.subheader("💼 Simulador de Negociação")
             
-            # Inicializar proposta_empresa no session_state se não existir
             if 'proposta_empresa' not in st.session_state:
-                st.session_state.proposta_empresa = float(faixa['minimo'])
+                modalidade = self.fatores.get('modalidade', 'CLT')
+                if modalidade == 'CLT':
+                    st.session_state.proposta_empresa = float(faixa['minimo'])
+                else:
+                    st.session_state.proposta_empresa = float(self.calcular_equivalencia_pj_clt(faixa['minimo']))
             
             proposta_empresa = st.number_input(
                 "Proposta recebida (R$)", 
@@ -458,16 +576,23 @@ class CalculadoraPropostaCompleta:
                 key="proposta_empresa_input"
             )
             
-            # Atualizar session_state
             st.session_state.proposta_empresa = proposta_empresa
             
             if proposta_empresa:
-                if proposta_empresa < faixa['minimo']:
+                modalidade = self.fatores.get('modalidade', 'CLT')
+                if modalidade == 'CLT':
+                    minimo = faixa['minimo']
+                    ideal = faixa['ideal']
+                else:
+                    minimo = self.calcular_equivalencia_pj_clt(faixa['minimo'])
+                    ideal = self.calcular_equivalencia_pj_clt(faixa['ideal'])
+                
+                if proposta_empresa < minimo:
                     st.error("❌ Abaixo do mínimo aceitável")
-                    st.info(f"**Contraproposta mínima:** R$ {faixa['minimo']:,.2f}")
-                elif proposta_empresa < faixa['ideal']:
+                    st.info(f"**Contraproposta mínima:** R$ {minimo:,.2f}")
+                elif proposta_empresa < ideal:
                     st.warning("⚠️ Dentro da faixa, mas abaixo do ideal")
-                    contraproposta = max(proposta_empresa * 1.15, faixa['ideal'])
+                    contraproposta = max(proposta_empresa * 1.10, ideal)
                     st.success(f"**Sugestão de contraproposta:** R$ {contraproposta:,.2f}")
                 else:
                     st.success("✅ Ótima proposta!")
@@ -488,7 +613,8 @@ class CalculadoraPropostaCompleta:
                 st.write(f"**IRRF:** R$ {clt.get('irrf', 0):,.2f}")
                 st.write(f"**Líquido:** R$ {clt.get('salario_liquido', 0):,.2f}")
                 st.write(f"**Alíquota Efetiva:** {clt.get('aliquota_efetiva', 0):.1f}%")
-                st.write(f"**FGTS/ano:** R$ {clt.get('fgts', 0) * 12:,.2f}")
+                st.write(f"**13º + Férias:** R$ {clt.get('decimo_terceiro', 0) + clt.get('ferias', 0):,.2f}")
+                st.write(f"**FGTS/ano:** R$ {clt.get('fgts_anual', 0):,.2f}")
                 st.write(f"**Total Anual:** R$ {clt.get('total_anual', 0):,.2f}")
             else:
                 st.warning("Dados CLT não disponíveis")
@@ -497,10 +623,12 @@ class CalculadoraPropostaCompleta:
             st.markdown("#### 🏢 PJ - Detalhamento")
             pj = comparacao['PJ']
             if pj:
+                st.write(f"**Valor Total:** R$ {pj.get('valor_total', 0):,.2f}")
                 st.write(f"**Pro-labore:** R$ {pj.get('pro_labore', 0):,.2f}")
-                st.write(f"**Faturamento:** R$ {pj.get('faturamento_restante', 0):,.2f}")
-                st.write(f"**Total Bruto:** R$ {pj.get('pro_labore', 0) + pj.get('faturamento_restante', 0):,.2f}")
-                st.write(f"**Impostos:** R$ {pj.get('total_impostos', 0):,.2f}")
+                st.write(f"**Faturamento Empresa:** R$ {pj.get('faturamento_empresa', 0):,.2f}")
+                st.write(f"**Impostos Pro-labore:** R$ {pj.get('imposto_pro_labore', 0):,.2f}")
+                st.write(f"**Impostos Empresa:** R$ {pj.get('imposto_simples', 0):,.2f}")
+                st.write(f"**Custos:** R$ {pj.get('custo_contabilidade', 0) + pj.get('custo_administrativo', 0):,.2f}")
                 st.write(f"**Alíquota Efetiva:** {pj.get('aliquota_efetiva', 0):.1f}%")
                 st.write(f"**Líquido:** R$ {pj.get('renda_liquida', 0):,.2f}")
                 st.write(f"**Total Anual:** R$ {pj.get('total_anual', 0):,.2f}")
@@ -510,10 +638,13 @@ class CalculadoraPropostaCompleta:
         # Recomendação
         st.markdown("---")
         if pj and clt:
-            if pj.get('renda_liquida', 0) > clt.get('salario_liquido', 0):
-                st.success("**🎯 Recomendação:** PJ pode ser mais vantajoso financeiramente")
+            diferenca = pj.get('renda_liquida', 0) - clt.get('salario_liquido', 0)
+            if diferenca > 500:
+                st.success(f"**🎯 Recomendação:** PJ é {diferenca:,.0f} mais vantajoso mensalmente")
+            elif diferenca < -500:
+                st.info(f"**🎯 Recomendação:** CLT é {abs(diferenca):,.0f} mais vantajoso mensalmente")
             else:
-                st.info("**🎯 Recomendação:** CLT oferece mais segurança e benefícios")
+                st.info("**🎯 Recomendação:** Ambas as modalidades são equivalentes financeiramente")
     
     def _mostrar_aba_graficos(self, faixa, salario_total_atual, comparacao_clt_pj):
         """Mostra gráficos comparativos"""
@@ -569,13 +700,13 @@ class CalculadoraPropostaCompleta:
             impostos_pj = [
                 comparacao_clt_pj['PJ'].get('imposto_pro_labore', 0), 
                 comparacao_clt_pj['PJ'].get('imposto_simples', 0),
-                comparacao_clt_pj['PJ'].get('custo_contabilidade', 0)
+                comparacao_clt_pj['PJ'].get('custo_contabilidade', 0) + comparacao_clt_pj['PJ'].get('custo_administrativo', 0)
             ]
             
             ax4.pie(impostos_clt + impostos_pj, 
-                    labels=['INSS', 'IRRF', 'Pro-labore', 'Simples', 'Contabilidade'],
+                    labels=['INSS', 'IRRF', 'Pro-labore', 'Simples', 'Custos PJ'],
                     autopct='%1.1f%%')
-            ax4.set_title('Distribuição de Impostos')
+            ax4.set_title('Distribuição de Impostos e Custos')
             
             plt.tight_layout()
             st.pyplot(fig)
@@ -636,42 +767,47 @@ class CalculadoraPropostaCompleta:
         try:
             faixa = self.calcular_faixa_recomendada()
             comparacao = self.comparar_clt_pj(faixa['ideal'], self.calcular_equivalencia_pj_clt(faixa['ideal']))
+            modalidade = self.fatores.get('modalidade', 'CLT')
             
             relatorio = f"""
-    RELATÓRIO DE PROPOSTA SALARIAL - {datetime.now().strftime('%d/%m/%Y %H:%M')}
-    
-    SITUAÇÃO ATUAL:
-    - Salário bruto: R$ {self.fatores.get('salario_atual', 0):,.2f}
-    - Benefícios: R$ {self.fatores.get('beneficios_atual', 0):,.2f}
-    - Total atual: R$ {self.fatores.get('salario_atual', 0) + self.fatores.get('beneficios_atual', 0):,.2f}
-    - Tempo deslocamento: {self.fatores.get('tempo_viagem_atual', 0)}h/dia
-    
-    NOVA OPORTUNIDADE:
-    - Custo de vida: {self.fatores.get('custo_vida_nova', 0)*100:.1f}%
-    - Dias presenciais: {self.fatores.get('dias_presencial_novo', 0)}/semana
-    - Novo deslocamento: {self.fatores.get('tempo_viagem_novo', 0)}h/dia
-    
-    VALORES RECOMENDADOS:
-    - Mínimo aceitável: R$ {faixa['minimo']:,.2f}
-    - Valor ideal CLT: R$ {faixa['ideal']:,.2f}
-    - Equivalente PJ: R$ {self.calcular_equivalencia_pj_clt(faixa['ideal']):,.2f}
-    - Máximo negociação: R$ {faixa['maximo_negociacao']:,.2f}
-    
-    COMPARAÇÃO CLT vs PJ:
-    - CLT Bruto: R$ {comparacao['CLT'].get('salario_bruto', 0):,.2f}
-    - CLT Líquido: R$ {comparacao['CLT'].get('salario_liquido', 0):,.2f}
-    - PJ Líquido: R$ {comparacao['PJ'].get('renda_liquida', 0):,.2f}
-    - Diferença: R$ {comparacao['PJ'].get('renda_liquida', 0) - comparacao['CLT'].get('salario_liquido', 0):,.2f}
-    
-    FATORES QUALITATIVOS:
-    - Crescimento: {self.fatores.get('crescimento_carreira', 0)}/10
-    - Estabilidade: {self.fatores.get('estabilidade', 0)}/10  
-    - Benefícios: {self.fatores.get('beneficios_qualidade', 0)}/10
-    
-    RECOMENDAÇÕES:
-    - Estratégia de negociação: Buscar R$ {faixa['ideal']:,.2f} (CLT)
-    - Contraproposta mínima: R$ {faixa['minimo']:,.2f}
-    - Considerar PJ se oferecerem acima de R$ {self.calcular_equivalencia_pj_clt(faixa['ideal']):,.2f}
+RELATÓRIO DE PROPOSTA SALARIAL - {datetime.now().strftime('%d/%m/%Y %H:%M')}
+
+SITUAÇÃO ATUAL:
+- Salário bruto: R$ {self.fatores.get('salario_atual', 0):,.2f}
+- Benefícios totais: R$ {self.fatores.get('beneficios_atual', 0):,.2f}
+- VA/VR: R$ {self.beneficios_detalhados.get('va_vr', 0):,.2f}
+- VT: R$ {self.beneficios_detalhados.get('vt', 0):,.2f}
+- Plano saúde: {'Sim' if self.beneficios_detalhados.get('plano_saude', False) else 'Não'}
+- Coparticipação: R$ {self.beneficios_detalhados.get('coparticipacao', 0):,.2f}
+- Outros: R$ {self.beneficios_detalhados.get('outros_beneficios', 0):,.2f}
+- Total atual: R$ {self.fatores.get('salario_atual', 0) + self.fatores.get('beneficios_atual', 0):,.2f}
+- Tempo deslocamento: {self.fatores.get('tempo_viagem_atual', 0)}h/dia
+
+NOVA OPORTUNIDADE:
+- Modalidade: {modalidade}
+- Custo de vida: {self.fatores.get('custo_vida_nova', 0)*100:.1f}%
+- Dias presenciais: {self.fatores.get('dias_presencial_novo', 0)}/semana
+- Novo deslocamento: {self.fatores.get('tempo_viagem_novo', 0)}h/dia
+
+VALORES RECOMENDADOS - {modalidade}:
+- Mínimo aceitável: R$ {faixa['minimo'] if modalidade == 'CLT' else self.calcular_equivalencia_pj_clt(faixa['minimo']):,.2f}
+- Valor ideal: R$ {faixa['ideal'] if modalidade == 'CLT' else self.calcular_equivalencia_pj_clt(faixa['ideal']):,.2f}
+- Máximo negociação: R$ {faixa['maximo_negociacao'] if modalidade == 'CLT' else self.calcular_equivalencia_pj_clt(faixa['maximo_negociacao']):,.2f}
+
+COMPARAÇÃO CLT vs PJ:
+- CLT Líquido: R$ {comparacao['CLT'].get('salario_liquido', 0):,.2f}
+- PJ Líquido: R$ {comparacao['PJ'].get('renda_liquida', 0):,.2f}
+- Diferença: R$ {comparacao['PJ'].get('renda_liquida', 0) - comparacao['CLT'].get('salario_liquido', 0):,.2f}
+
+FATORES QUALITATIVOS:
+- Crescimento: {self.fatores.get('crescimento_carreira', 0)}/10
+- Estabilidade: {self.fatores.get('estabilidade', 0)}/10  
+- Benefícios: {self.fatores.get('beneficios_qualidade', 0)}/10
+
+RECOMENDAÇÕES:
+- Estratégia de negociação: Buscar R$ {faixa['ideal'] if modalidade == 'CLT' else self.calcular_equivalencia_pj_clt(faixa['ideal']):,.2f}
+- Contraproposta mínima: R$ {faixa['minimo'] if modalidade == 'CLT' else self.calcular_equivalencia_pj_clt(faixa['minimo']):,.2f}
+- {'Considerar CLT se oferecerem benefícios equivalentes' if modalidade == 'PJ' else 'Considerar PJ se oferecerem valor equivalente'}
             """
             return relatorio
         except Exception as e:
