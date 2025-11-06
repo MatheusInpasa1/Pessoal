@@ -54,7 +54,8 @@ class CalculadoraPropostaCompleta:
         with col2:
             self.fatores['ferias_atual'] = st.number_input(
                 "Dias de férias atuais", 
-                min_value=10, max_value=40, 
+                min_value=10, 
+                max_value=40, 
                 value=int(self.fatores.get('ferias_atual', 30)),
                 key="ferias_atual_input"
             )
@@ -64,11 +65,13 @@ class CalculadoraPropostaCompleta:
                 value=int(self.fatores.get('home_office_atual', 2)),
                 key="home_office_atual_input"
             )
+            # CORREÇÃO AQUI: removida a vírgula extra e parâmetro posicional
             self.fatores['tempo_viagem_atual'] = st.slider(
                 "Tempo de deslocamento diário (horas)", 
-                0.0, 4.0, 
+                min_value=0.0, 
+                max_value=4.0, 
                 value=float(self.fatores.get('tempo_viagem_atual', 1.5)), 
-                0.5,
+                step=0.5,
                 key="tempo_viagem_atual_input"
             )
     
@@ -81,25 +84,28 @@ class CalculadoraPropostaCompleta:
         with col1:
             custo_vida_temp = st.slider(
                 "Variação no custo de vida (%)", 
-                -50.0, 100.0, 
+                min_value=-50.0, 
+                max_value=100.0, 
                 value=float(self.fatores.get('custo_vida_nova', 10.0) * 100), 
-                5.0,
+                step=5.0,
                 key="custo_vida_input"
             )
             self.fatores['custo_vida_nova'] = custo_vida_temp / 100
             
             self.fatores['dias_presencial_novo'] = st.slider(
                 "Dias de trabalho presencial na nova empresa (por semana)", 
-                0, 5, 
+                min_value=0, 
+                max_value=5, 
                 value=int(self.fatores.get('dias_presencial_novo', 3)),
                 key="dias_presencial_input"
             )
             
             self.fatores['tempo_viagem_novo'] = st.slider(
                 "Tempo de deslocamento novo (horas/dia)", 
-                0.0, 4.0, 
+                min_value=0.0, 
+                max_value=4.0, 
                 value=float(self.fatores.get('tempo_viagem_novo', 0.5)), 
-                0.5,
+                step=0.5,
                 key="tempo_viagem_novo_input"
             )
             
@@ -115,19 +121,22 @@ class CalculadoraPropostaCompleta:
             st.subheader("Avaliação Qualitativa (1-10)")
             self.fatores['crescimento_carreira'] = st.slider(
                 "Potencial de crescimento na nova empresa", 
-                1, 10, 
+                min_value=1, 
+                max_value=10, 
                 value=int(self.fatores.get('crescimento_carreira', 7)),
                 key="crescimento_input"
             )
             self.fatores['estabilidade'] = st.slider(
                 "Estabilidade da nova empresa", 
-                1, 10, 
+                min_value=1, 
+                max_value=10, 
                 value=int(self.fatores.get('estabilidade', 6)),
                 key="estabilidade_input"
             )
             self.fatores['beneficios_qualidade'] = st.slider(
                 "Qualidade dos benefícios", 
-                1, 10, 
+                min_value=1, 
+                max_value=10, 
                 value=int(self.fatores.get('beneficios_qualidade', 7)),
                 key="beneficios_qualidade_input"
             )
