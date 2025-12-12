@@ -14,6 +14,21 @@ class CalculadoraPropostaCompleta:
             st.session_state.resultados = {}
         if 'beneficios_detalhados' not in st.session_state:
             st.session_state.beneficios_detalhados = {}
+        if 'valores_pessoais' not in st.session_state:  # NOVO: Valores pessoais
+            st.session_state.valores_pessoais = {
+                'estabilidade_financeira': 5,
+                'flexibilidade_tempo': 5,
+                'crescimento_carreira': 5,
+                'equilibrio_vida_pessoal': 5,
+                'impacto_social': 3,
+                'inovacao_tecnologia': 5,
+                'cultura_empresa': 5,
+                'aprendizado_continuo': 5,
+                'reconhecimento': 5,
+                'autonomia': 5,
+                'seguranca_juridica': 5,
+                'beneficios_nao_monetarios': 5
+            }
         
     @property
     def fatores(self):
@@ -30,7 +45,261 @@ class CalculadoraPropostaCompleta:
     @beneficios_detalhados.setter
     def beneficios_detalhados(self, value):
         st.session_state.beneficios_detalhados = value
+    
+    @property  # NOVO: Propriedade para valores pessoais
+    def valores_pessoais(self):
+        return st.session_state.valores_pessoais
+    
+    @valores_pessoais.setter
+    def valores_pessoais(self, value):
+        st.session_state.valores_pessoais = value
+    
+    # NOVO: Método para coletar valores pessoais
+    def coletar_valores_pessoais(self):
+        """Coleta os valores e prioridades pessoais do funcionário"""
+        st.header("🎯 Seus Valores e Prioridades")
+        st.markdown("""
+        <div style='background-color: #f0f8ff; padding: 15px; border-radius: 10px; margin-bottom: 20px;'>
+        <p style='color: #1e40af; font-weight: bold;'>🔍 Avalie cada fator conforme sua importância pessoal:</p>
+        <p><strong>1-3:</strong> Pouco importante | <strong>4-7:</strong> Importante | <strong>8-10:</strong> Muito importante</p>
+        </div>
+        """, unsafe_allow_html=True)
         
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.subheader("💰 Estabilidade Financeira")
+            self.valores_pessoais['estabilidade_financeira'] = st.slider(
+                "Valorizo segurança financeira a longo prazo",
+                1, 10, value=self.valores_pessoais['estabilidade_financeira'],
+                key="estabilidade_financeira_slider"
+            )
+            
+            st.subheader("⏰ Flexibilidade de Tempo")
+            self.valores_pessoais['flexibilidade_tempo'] = st.slider(
+                "Valorizo horários flexíveis e autonomia",
+                1, 10, value=self.valores_pessoais['flexibilidade_tempo'],
+                key="flexibilidade_tempo_slider"
+            )
+            
+            st.subheader("📈 Crescimento na Carreira")
+            self.valores_pessoais['crescimento_carreira'] = st.slider(
+                "Busco rápido crescimento profissional",
+                1, 10, value=self.valores_pessoais['crescimento_carreira'],
+                key="crescimento_carreira_slider"
+            )
+            
+            st.subheader("⚖️ Equilíbrio Vida Pessoal")
+            self.valores_pessoais['equilibrio_vida_pessoal'] = st.slider(
+                "Valorizo tempo para família/hobbies",
+                1, 10, value=self.valores_pessoais['equilibrio_vida_pessoal'],
+                key="equilibrio_vida_slider"
+            )
+        
+        with col2:
+            st.subheader("🌍 Impacto Social")
+            self.valores_pessoais['impacto_social'] = st.slider(
+                "Importante contribuir para sociedade",
+                1, 10, value=self.valores_pessoais['impacto_social'],
+                key="impacto_social_slider"
+            )
+            
+            st.subheader("💻 Inovação Tecnológica")
+            self.valores_pessoais['inovacao_tecnologia'] = st.slider(
+                "Valorizo trabalhar com tecnologias novas",
+                1, 10, value=self.valores_pessoais['inovacao_tecnologia'],
+                key="inovacao_tecnologia_slider"
+            )
+            
+            st.subheader("🏢 Cultura da Empresa")
+            self.valores_pessoais['cultura_empresa'] = st.slider(
+                "Importante ambiente colaborativo",
+                1, 10, value=self.valores_pessoais['cultura_empresa'],
+                key="cultura_empresa_slider"
+            )
+            
+            st.subheader("🎓 Aprendizado Contínuo")
+            self.valores_pessoais['aprendizado_continuo'] = st.slider(
+                "Valorizo oportunidades de aprendizado",
+                1, 10, value=self.valores_pessoais['aprendizado_continuo'],
+                key="aprendizado_continuo_slider"
+            )
+        
+        with col3:
+            st.subheader("🏆 Reconhecimento")
+            self.valores_pessoais['reconhecimento'] = st.slider(
+                "Valorizo feedback e reconhecimento",
+                1, 10, value=self.valores_pessoais['reconhecimento'],
+                key="reconhecimento_slider"
+            )
+            
+            st.subheader("🎯 Autonomia e Poder de Decisão")
+            self.valores_pessoais['autonomia'] = st.slider(
+                "Valorizo independência nas decisões",
+                1, 10, value=self.valores_pessoais['autonomia'],
+                key="autonomia_slider"
+            )
+            
+            st.subheader("⚖️ Segurança Jurídica")
+            self.valores_pessoais['seguranca_juridica'] = st.slider(
+                "Importante estabilidade legal (CLT)",
+                1, 10, value=self.valores_pessoais['seguranca_juridica'],
+                key="seguranca_juridica_slider"
+            )
+            
+            st.subheader("🎁 Benefícios Não-Monetários")
+            self.valores_pessoais['beneficios_nao_monetarios'] = st.slider(
+                "Valorizo bens/serviços além do salário",
+                1, 10, value=self.valores_pessoais['beneficios_nao_monetarios'],
+                key="beneficios_nao_monetarios_slider"
+            )
+        
+        # NOVO: Prioridades principais (escolher top 3)
+        st.markdown("---")
+        st.subheader("🏆 Suas 3 Prioridades Principais")
+        
+        opcoes_prioridades = [
+            "Estabilidade Financeira",
+            "Flexibilidade de Tempo", 
+            "Crescimento na Carreira",
+            "Equilíbrio Vida Pessoal",
+            "Impacto Social",
+            "Inovação Tecnológica",
+            "Cultura da Empresa",
+            "Aprendizado Contínuo",
+            "Reconhecimento",
+            "Autonomia",
+            "Segurança Jurídica",
+            "Benefícios Não-Monetários"
+        ]
+        
+        col_pri1, col_pri2, col_pri3 = st.columns(3)
+        
+        with col_pri1:
+            self.valores_pessoais['prioridade_1'] = st.selectbox(
+                "1ª Prioridade",
+                opcoes_prioridades,
+                index=0,
+                key="prioridade_1_select"
+            )
+        
+        with col_pri2:
+            # Remove a prioridade já selecionada
+            opcoes_restantes = [op for op in opcoes_prioridades if op != self.valores_pessoais.get('prioridade_1', '')]
+            self.valores_pessoais['prioridade_2'] = st.selectbox(
+                "2ª Prioridade",
+                opcoes_restantes,
+                index=min(1, len(opcoes_restantes)-1),
+                key="prioridade_2_select"
+            )
+        
+        with col_pri3:
+            # Remove as duas prioridades já selecionadas
+            opcoes_restantes = [op for op in opcoes_prioridades 
+                              if op not in [self.valores_pessoais.get('prioridade_1', ''), 
+                                          self.valores_pessoais.get('prioridade_2', '')]]
+            self.valores_pessoais['prioridade_3'] = st.selectbox(
+                "3ª Prioridade",
+                opcoes_restantes,
+                index=min(2, len(opcoes_restantes)-1),
+                key="prioridade_3_select"
+            )
+        
+        # NOVO: Visualizar perfil de valores
+        st.markdown("---")
+        if st.button("📊 Visualizar Meu Perfil de Valores", key="visualizar_perfil_btn"):
+            self._mostrar_perfil_valores()
+    
+    # NOVO: Método para mostrar perfil de valores
+    def _mostrar_perfil_valores(self):
+        """Mostra visualização do perfil de valores"""
+        st.subheader("📊 Seu Perfil de Valores")
+        
+        # Criar DataFrame para visualização
+        valores_df = pd.DataFrame({
+            'Valor': list(self.valores_pessoais.keys())[:12],  # Exclui prioridades
+            'Importância': list(self.valores_pessoais.values())[:12]
+        })
+        
+        # Ordenar por importância
+        valores_df = valores_df.sort_values('Importância', ascending=False)
+        
+        # Gráfico de barras
+        fig, ax = plt.subplots(figsize=(12, 8))
+        bars = ax.barh(valores_df['Valor'], valores_df['Importância'], 
+                      color=plt.cm.viridis(valores_df['Importância']/10))
+        
+        ax.set_xlabel('Importância (1-10)')
+        ax.set_title('Seu Perfil de Valores Pessoais')
+        ax.set_xlim(0, 10)
+        
+        # Adicionar valores nas barras
+        for bar in bars:
+            width = bar.get_width()
+            ax.text(width + 0.1, bar.get_y() + bar.get_height()/2, 
+                   f'{width:.1f}', va='center')
+        
+        st.pyplot(fig)
+        
+        # Análise do perfil
+        st.markdown("#### 📝 Análise do Seu Perfil")
+        
+        top_3 = valores_df.nlargest(3, 'Importância')
+        st.write(f"**🎯 Seus 3 valores mais importantes:**")
+        for idx, (valor, importancia) in enumerate(zip(top_3['Valor'], top_3['Importância']), 1):
+            st.write(f"{idx}. {self._traduzir_valor(valor)}: **{importancia}/10**")
+        
+        # Recomendação baseada no perfil
+        perfil_tipo = self._identificar_perfil_tipo(valores_df)
+        st.info(f"**🔍 Seu perfil predominante:** {perfil_tipo}")
+        
+        if perfil_tipo == "Estabilidade":
+            st.write("Você valoriza segurança e previsibilidade. Busque empresas estabelecidas e contratos CLT.")
+        elif perfil_tipo == "Crescimento":
+            st.write("Você prioriza desenvolvimento profissional. Empresas em expansão podem oferecer mais oportunidades.")
+        elif perfil_tipo == "Equilíbrio":
+            st.write("Qualidade de vida é fundamental. Considere empresas com políticas de flexibilidade.")
+        elif perfil_tipo == "Inovação":
+            st.write("Você busca desafios e novidades. Startups e empresas de tecnologia podem ser ideais.")
+    
+    # NOVO: Método auxiliar para traduzir nomes dos valores
+    def _traduzir_valor(self, valor_key):
+        traducoes = {
+            'estabilidade_financeira': 'Estabilidade Financeira',
+            'flexibilidade_tempo': 'Flexibilidade de Tempo',
+            'crescimento_carreira': 'Crescimento na Carreira',
+            'equilibrio_vida_pessoal': 'Equilíbrio Vida Pessoal',
+            'impacto_social': 'Impacto Social',
+            'inovacao_tecnologia': 'Inovação Tecnológica',
+            'cultura_empresa': 'Cultura da Empresa',
+            'aprendizado_continuo': 'Aprendizado Contínuo',
+            'reconhecimento': 'Reconhecimento',
+            'autonomia': 'Autonomia',
+            'seguranca_juridica': 'Segurança Jurídica',
+            'beneficios_nao_monetarios': 'Benefícios Não-Monetários'
+        }
+        return traducoes.get(valor_key, valor_key)
+    
+    # NOVO: Método para identificar tipo de perfil
+    def _identificar_perfil_tipo(self, valores_df):
+        """Identifica o tipo de perfil predominante"""
+        # Calcular médias por categoria
+        categorias = {
+            'Estabilidade': ['estabilidade_financeira', 'seguranca_juridica'],
+            'Crescimento': ['crescimento_carreira', 'aprendizado_continuo', 'reconhecimento'],
+            'Equilíbrio': ['flexibilidade_tempo', 'equilibrio_vida_pessoal'],
+            'Inovação': ['inovacao_tecnologia', 'autonomia'],
+            'Social': ['impacto_social', 'cultura_empresa', 'beneficios_nao_monetarios']
+        }
+        
+        medias = {}
+        for categoria, chaves in categorias.items():
+            # Filtrar valores que existem no DataFrame
+            valores_categoria = valores_df[valores_df['Valor'].isin(chaves)]['Importância'].mean()
+            medias[categoria] = valores_categoria if not np.isnan(valores_categoria) else 0
+        
+        return max(medias.items(), key=lambda x: x[1])[0]
+    
     def coletar_dados_atual(self):
         """Coleta informações sobre a situação atual"""
         st.header("📊 Situação Atual")
@@ -180,7 +449,7 @@ class CalculadoraPropostaCompleta:
             )
         
         with col2:
-            st.subheader("Avaliação Qualitativa (1-10)")
+            st.subheader("Avaliação Qualitativa da Empresa (1-10)")
             self.fatores['crescimento_carreira'] = st.slider(
                 "Potencial de crescimento na nova empresa", 
                 min_value=1, 
@@ -203,6 +472,18 @@ class CalculadoraPropostaCompleta:
                 key="beneficios_qualidade_input"
             )
             
+            # NOVO: Fatores qualitativos da empresa
+            self.fatores['cultura_empresa_nova'] = st.slider(
+                "Cultura e ambiente de trabalho", 
+                1, 10, value=int(self.fatores.get('cultura_empresa_nova', 7)),
+                key="cultura_empresa_nova_slider"
+            )
+            self.fatores['inovacao_tecnologia_nova'] = st.slider(
+                "Inovação e tecnologia utilizada", 
+                1, 10, value=int(self.fatores.get('inovacao_tecnologia_nova', 7)),
+                key="inovacao_tecnologia_nova_slider"
+            )
+            
             # Modalidade de contratação
             st.subheader("📝 Modalidade")
             self.fatores['modalidade'] = st.selectbox(
@@ -211,6 +492,96 @@ class CalculadoraPropostaCompleta:
                 index=0 if self.fatores.get('modalidade', 'CLT') == 'CLT' else 1,
                 key="modalidade_input"
             )
+    
+    # NOVO: Método para calcular compatibilidade com valores pessoais
+    def calcular_compatibilidade_valores(self):
+        """Calcula compatibilidade entre valores pessoais e nova oportunidade"""
+        compatibilidade = {
+            'estabilidade_financeira': min(
+                self.valores_pessoais['estabilidade_financeira'],
+                self.fatores.get('estabilidade', 5)
+            ) / 10 * 100,
+            'crescimento_carreira': min(
+                self.valores_pessoais['crescimento_carreira'],
+                self.fatores.get('crescimento_carreira', 5)
+            ) / 10 * 100,
+            'flexibilidade_tempo': self._calcular_compatibilidade_flexibilidade(),
+            'equilibrio_vida_pessoal': self._calcular_compatibilidade_equilibrio(),
+            'inovacao_tecnologia': min(
+                self.valores_pessoais['inovacao_tecnologia'],
+                self.fatores.get('inovacao_tecnologia_nova', 5)
+            ) / 10 * 100,
+            'cultura_empresa': min(
+                self.valores_pessoais['cultura_empresa'],
+                self.fatores.get('cultura_empresa_nova', 5)
+            ) / 10 * 100
+        }
+        
+        # Média ponderada pelas prioridades
+        pesos = {
+            'estabilidade_financeira': 1.5 if 'Estabilidade Financeira' in [
+                self.valores_pessoais.get('prioridade_1', ''),
+                self.valores_pessoais.get('prioridade_2', ''),
+                self.valores_pessoais.get('prioridade_3', '')
+            ] else 1.0,
+            'crescimento_carreira': 1.5 if 'Crescimento na Carreira' in [
+                self.valores_pessoais.get('prioridade_1', ''),
+                self.valores_pessoais.get('prioridade_2', ''),
+                self.valores_pessoais.get('prioridade_3', '')
+            ] else 1.0
+        }
+        
+        total_compatibilidade = 0
+        total_pesos = 0
+        
+        for chave, valor in compatibilidade.items():
+            peso = pesos.get(chave, 1.0)
+            total_compatibilidade += valor * peso
+            total_pesos += peso
+        
+        return {
+            'compatibilidade_geral': total_compatibilidade / total_pesos if total_pesos > 0 else 0,
+            'detalhado': compatibilidade
+        }
+    
+    # NOVO: Métodos auxiliares para cálculo de compatibilidade
+    def _calcular_compatibilidade_flexibilidade(self):
+        """Calcula compatibilidade para flexibilidade de tempo"""
+        dias_presencial = self.fatores.get('dias_presencial_novo', 3)
+        valor_pessoal = self.valores_pessoais['flexibilidade_tempo']
+        
+        # Quanto mais presencial, menor a compatibilidade para quem valoriza flexibilidade
+        if dias_presencial <= 1:
+            compatibilidade = 100
+        elif dias_presencial == 2:
+            compatibilidade = 80
+        elif dias_presencial == 3:
+            compatibilidade = 60
+        elif dias_presencial == 4:
+            compatibilidade = 40
+        else:
+            compatibilidade = 20
+        
+        # Ajustar pelo valor pessoal
+        return min(valor_pessoal * 10, compatibilidade)
+    
+    def _calcular_compatibilidade_equilibrio(self):
+        """Calcula compatibilidade para equilíbrio vida-trabalho"""
+        tempo_deslocamento = self.fatores.get('tempo_viagem_novo', 0.5)
+        valor_pessoal = self.valores_pessoais['equilibrio_vida_pessoal']
+        
+        if tempo_deslocamento <= 0.5:
+            compatibilidade = 100
+        elif tempo_deslocamento <= 1.0:
+            compatibilidade = 80
+        elif tempo_deslocamento <= 1.5:
+            compatibilidade = 60
+        elif tempo_deslocamento <= 2.0:
+            compatibilidade = 40
+        else:
+            compatibilidade = 20
+        
+        return min(valor_pessoal * 10, compatibilidade)
     
     def calcular_impostos_clt(self, salario_bruto):
         """Calcula impostos CLT conforme legislação 2024 - CORRIGIDO"""
@@ -436,6 +807,17 @@ class CalculadoraPropostaCompleta:
             
             valor_ideal_mensal = compensacao_minima * fator_total
             
+            # NOVO: Ajuste por compatibilidade de valores pessoais
+            compatibilidade = self.calcular_compatibilidade_valores()
+            fator_valores_pessoais = compatibilidade['compatibilidade_geral'] / 100
+            
+            # Se compatibilidade alta (>80%), pode aceitar um pouco menos
+            if fator_valores_pessoais > 0.8:
+                valor_ideal_mensal = valor_ideal_mensal * 0.95  # 5% menos
+            # Se compatibilidade baixa (<50%), exige mais compensação
+            elif fator_valores_pessoais < 0.5:
+                valor_ideal_mensal = valor_ideal_mensal * 1.10  # 10% mais
+            
             return valor_ideal_mensal
             
         except Exception as e:
@@ -484,12 +866,15 @@ class CalculadoraPropostaCompleta:
             else:
                 comparacao_clt_pj = self.comparar_clt_pj(faixa['ideal'] / 1.45, faixa['ideal'])
             
+            # NOVO: Calcular compatibilidade de valores
+            compatibilidade = self.calcular_compatibilidade_valores()
+            
             # Layout do dashboard
             st.markdown("---")
             st.header("📈 Dashboard de Análise")
             
             # Métricas principais
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4, col5 = st.columns(5)  # NOVO: Adicionada coluna extra
             
             with col1:
                 aumento_ideal = ((faixa['ideal'] - salario_total_atual) / salario_total_atual) * 100
@@ -510,8 +895,12 @@ class CalculadoraPropostaCompleta:
                     liquido = comparacao_clt_pj['PJ'].get('renda_liquida', 0)
                 st.metric(f"Líquido {modalidade} Ideal", f"R$ {liquido:,.0f}")
             
+            with col5:  # NOVO: Métrica de compatibilidade
+                compatibilidade_geral = compatibilidade['compatibilidade_geral']
+                st.metric("Compatibilidade Valores", f"{compatibilidade_geral:.1f}%")
+            
             # Abas para diferentes análises
-            tab1, tab2, tab3, tab4 = st.tabs(["💰 Valores", "⚖️ CLT vs PJ", "📊 Gráficos", "✅ Checklist"])
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(["💰 Valores", "⚖️ CLT vs PJ", "🎯 Valores Pessoais", "📊 Gráficos", "✅ Checklist"])  # NOVO: Adicionada aba Valores Pessoais
             
             with tab1:
                 self._mostrar_aba_valores(faixa, salario_total_atual, comparacao_clt_pj)
@@ -519,11 +908,14 @@ class CalculadoraPropostaCompleta:
             with tab2:
                 self._mostrar_aba_clt_pj(comparacao_clt_pj, faixa)
             
-            with tab3:
-                self._mostrar_aba_graficos(faixa, salario_total_atual, comparacao_clt_pj)
+            with tab3:  # NOVO: Aba de valores pessoais
+                self._mostrar_aba_valores_pessoais(compatibilidade)
             
             with tab4:
-                self._mostrar_aba_checklist()
+                self._mostrar_aba_graficos(faixa, salario_total_atual, comparacao_clt_pj, compatibilidade)  # NOVO: Passar compatibilidade
+            
+            with tab5:
+                self._mostrar_aba_checklist(compatibilidade)  # NOVO: Passar compatibilidade
                 
         except Exception as e:
             st.error(f"Erro ao gerar dashboard: {e}")
@@ -646,7 +1038,117 @@ class CalculadoraPropostaCompleta:
             else:
                 st.info("**🎯 Recomendação:** Ambas as modalidades são equivalentes financeiramente")
     
-    def _mostrar_aba_graficos(self, faixa, salario_total_atual, comparacao_clt_pj):
+    # NOVO: Aba para mostrar análise de valores pessoais
+    def _mostrar_aba_valores_pessoais(self, compatibilidade):
+        """Mostra análise de compatibilidade com valores pessoais"""
+        st.subheader("🎯 Compatibilidade com Seus Valores")
+        
+        # Mostrar compatibilidade geral
+        st.metric("Compatibilidade Geral", f"{compatibilidade['compatibilidade_geral']:.1f}%")
+        
+        # Gráfico de compatibilidade por fator
+        st.subheader("📊 Compatibilidade por Fator")
+        
+        fig, ax = plt.subplots(figsize=(10, 6))
+        
+        fatores = list(compatibilidade['detalhado'].keys())
+        valores = list(compatibilidade['detalhado'].values())
+        
+        # Ordenar por valor
+        sorted_indices = np.argsort(valores)
+        fatores = [fatores[i] for i in sorted_indices]
+        valores = [valores[i] for i in sorted_indices]
+        
+        bars = ax.barh(fatores, valores, 
+                      color=['red' if v < 50 else 'orange' if v < 70 else 'green' for v in valores])
+        
+        ax.set_xlabel('Compatibilidade (%)')
+        ax.set_title('Compatibilidade com Seus Valores Pessoais')
+        ax.set_xlim(0, 100)
+        
+        # Adicionar valores
+        for bar, valor in zip(bars, valores):
+            ax.text(valor + 1, bar.get_y() + bar.get_height()/2, 
+                   f'{valor:.1f}%', va='center')
+        
+        st.pyplot(fig)
+        
+        # Análise detalhada
+        st.subheader("📝 Análise Detalhada")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**🎯 Suas 3 Prioridades Principais:**")
+            st.write(f"1. {self.valores_pessoais.get('prioridade_1', 'Não definida')}")
+            st.write(f"2. {self.valores_pessoais.get('prioridade_2', 'Não definida')}")
+            st.write(f"3. {self.valores_pessoais.get('prioridade_3', 'Não definida')}")
+        
+        with col2:
+            st.write("**🔍 Pontos Fortes desta Oportunidade:**")
+            
+            # Identificar pontos fortes (compatibilidade > 80%)
+            pontos_fortes = []
+            for fator, valor in compatibilidade['detalhado'].items():
+                if valor > 80:
+                    pontos_fortes.append(self._traduzir_valor(fator))
+            
+            if pontos_fortes:
+                for ponto in pontos_fortes[:3]:  # Mostrar até 3
+                    st.write(f"✅ {ponto}")
+            else:
+                st.write("Nenhum ponto forte significativo identificado")
+            
+            st.write("**⚠️ Pontos de Atenção:**")
+            
+            # Identificar pontos fracos (compatibilidade < 50%)
+            pontos_fracos = []
+            for fator, valor in compatibilidade['detalhado'].items():
+                if valor < 50:
+                    pontos_fracos.append(self._traduzir_valor(fator))
+            
+            if pontos_fracos:
+                for ponto in pontos_fracos[:3]:  # Mostrar até 3
+                    st.write(f"❌ {ponto}")
+            else:
+                st.write("Nenhum ponto fraco crítico identificado")
+        
+        # Recomendação baseada em valores
+        st.markdown("---")
+        st.subheader("💡 Recomendação Baseada em Valores")
+        
+        if compatibilidade['compatibilidade_geral'] >= 80:
+            st.success("""
+            **🎉 Excelente Compatibilidade!**
+            
+            Esta oportunidade alinha-se muito bem com seus valores pessoais.
+            Mesmo que a oferta salarial não seja a ideal, considere aceitar por:
+            - Maior satisfação pessoal e profissional
+            - Melhor qualidade de vida
+            - Alinhamento com suas prioridades
+            """)
+        elif compatibilidade['compatibilidade_geral'] >= 60:
+            st.warning("""
+            **⚠️ Compatibilidade Moderada**
+            
+            Esta oportunidade tem pontos positivos e negativos em relação aos seus valores.
+            Considere:
+            - Negociar melhorias nos pontos fracos
+            - Avaliar trade-offs entre dinheiro e satisfação
+            - Pedir período experimental antes de decidir
+            """)
+        else:
+            st.error("""
+            **❌ Baixa Compatibilidade**
+            
+            Esta oportunidade não atende bem aos seus valores pessoais.
+            Só aceite se:
+            - A compensação financeira for excepcionalmente boa
+            - For uma posição temporária para ganhar experiência
+            - Não houver outras opções no momento
+            """)
+    
+    def _mostrar_aba_graficos(self, faixa, salario_total_atual, comparacao_clt_pj, compatibilidade):
         """Mostra gráficos comparativos"""
         st.subheader("📊 Análise Visual")
         
@@ -666,17 +1168,19 @@ class CalculadoraPropostaCompleta:
                         f'R$ {valor:,.0f}', ha='center', va='bottom')
             
             # Gráfico 2: Fatores qualitativos
-            fatores = ['Crescimento', 'Estabilidade', 'Benefícios']
+            fatores = ['Crescimento', 'Estabilidade', 'Benefícios', 'Cultura', 'Inovação']
             valores_fatores = [
                 self.fatores.get('crescimento_carreira', 5), 
                 self.fatores.get('estabilidade', 5), 
-                self.fatores.get('beneficios_qualidade', 5)
+                self.fatores.get('beneficios_qualidade', 5),
+                self.fatores.get('cultura_empresa_nova', 5),
+                self.fatores.get('inovacao_tecnologia_nova', 5)
             ]
             
-            bars2 = ax2.bar(fatores, valores_fatores, color=['purple', 'red', 'blue'])
+            bars2 = ax2.bar(fatores, valores_fatores, color=['purple', 'red', 'blue', 'green', 'orange'])
             ax2.set_ylim(0, 10)
             ax2.set_ylabel('Avaliação (1-10)')
-            ax2.set_title('Fatores Qualitativos')
+            ax2.set_title('Fatores Qualitativos da Empresa')
             
             # Gráfico 3: CLT vs PJ
             modalidades = ['CLT Líquido', 'PJ Líquido']
@@ -692,21 +1196,21 @@ class CalculadoraPropostaCompleta:
                 ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 300, 
                         f'R$ {valor:,.0f}', ha='center', va='bottom')
             
-            # Gráfico 4: Impostos
-            impostos_clt = [
-                comparacao_clt_pj['CLT'].get('inss', 0), 
-                comparacao_clt_pj['CLT'].get('irrf', 0)
-            ]
-            impostos_pj = [
-                comparacao_clt_pj['PJ'].get('imposto_pro_labore', 0), 
-                comparacao_clt_pj['PJ'].get('imposto_simples', 0),
-                comparacao_clt_pj['PJ'].get('custo_contabilidade', 0) + comparacao_clt_pj['PJ'].get('custo_administrativo', 0)
+            # Gráfico 4: Compatibilidade com valores pessoais
+            fatores_compat = ['Estabilidade', 'Crescimento', 'Flexibilidade', 'Equilíbrio', 'Cultura']
+            valores_compat = [
+                compatibilidade['detalhado'].get('estabilidade_financeira', 0),
+                compatibilidade['detalhado'].get('crescimento_carreira', 0),
+                compatibilidade['detalhado'].get('flexibilidade_tempo', 0),
+                compatibilidade['detalhado'].get('equilibrio_vida_pessoal', 0),
+                compatibilidade['detalhado'].get('cultura_empresa', 0)
             ]
             
-            ax4.pie(impostos_clt + impostos_pj, 
-                    labels=['INSS', 'IRRF', 'Pro-labore', 'Simples', 'Custos PJ'],
-                    autopct='%1.1f%%')
-            ax4.set_title('Distribuição de Impostos e Custos')
+            ax4.bar(fatores_compat, valores_compat, 
+                   color=['blue', 'green', 'orange', 'purple', 'red'])
+            ax4.set_ylim(0, 100)
+            ax4.set_ylabel('Compatibilidade (%)')
+            ax4.set_title('Compatibilidade com Valores Pessoais')
             
             plt.tight_layout()
             st.pyplot(fig)
@@ -714,7 +1218,7 @@ class CalculadoraPropostaCompleta:
         except Exception as e:
             st.error(f"Erro ao gerar gráficos: {e}")
     
-    def _mostrar_aba_checklist(self):
+    def _mostrar_aba_checklist(self, compatibilidade):
         """Mostra checklist de decisão"""
         st.subheader("✅ Checklist de Decisão")
         
@@ -727,7 +1231,9 @@ class CalculadoraPropostaCompleta:
                 "🏠 Até 3 dias presenciais": self.fatores.get('dias_presencial_novo', 0) <= 3,
                 "⏰ Deslocamento ≤ 1h/dia": self.fatores.get('tempo_viagem_novo', 0) <= 1.0,
                 "📈 Benefícios ≥ 7": self.fatores.get('beneficios_qualidade', 0) >= 7,
-                "💸 Custo de vida suportável": self.fatores.get('custo_vida_nova', 0) <= 0.2
+                "💸 Custo de vida suportável": self.fatores.get('custo_vida_nova', 0) <= 0.2,
+                "🎯 Compatibilidade valores ≥ 70%": compatibilidade['compatibilidade_geral'] >= 70,  # NOVO
+                "🏆 Alinha com prioridades pessoais": self._verificar_prioridades()  # NOVO
             }
             
             pontuacao = sum(decisions.values())
@@ -739,19 +1245,29 @@ class CalculadoraPropostaCompleta:
             
             st.metric("Pontuação da Oportunidade", f"{pontuacao}/{total}")
             
-            if pontuacao >= 5:
-                st.success("🎉 Esta oportunidade parece excelente!")
-            elif pontuacao >= 3:
+            if pontuacao >= 7:
+                st.success("🎉 Esta oportunidade parece excelente em todos os aspectos!")
+            elif pontuacao >= 5:
                 st.warning("⚠️ Avalie cuidadosamente os trade-offs")
             else:
                 st.error("❌ Considere outras oportunidades")
+            
+            # NOVO: Análise baseada em valores
+            st.markdown("---")
+            st.subheader("💭 Reflexão Baseada em Valores")
+            
+            st.write("**Perguntas para reflexão:**")
+            st.write("1. Esta oportunidade me aproxima dos meus objetivos de longo prazo?")
+            st.write("2. Estou disposto a abrir mão de algum valor pessoal por mais dinheiro?")
+            st.write("3. Como me sentirei trabalhando aqui daqui a 1 ano?")
+            st.write("4. Esta escolha me deixaria mais realizado pessoal e profissionalmente?")
             
             # Exportar relatório
             st.markdown("---")
             st.subheader("📤 Exportar Relatório")
             
             if st.button("💾 Gerar Relatório Completo"):
-                relatorio = self._gerar_relatorio_texto()
+                relatorio = self._gerar_relatorio_texto(compatibilidade)
                 st.download_button(
                     label="📥 Baixar Relatório (.txt)",
                     data=relatorio,
@@ -762,7 +1278,36 @@ class CalculadoraPropostaCompleta:
         except Exception as e:
             st.error(f"Erro no checklist: {e}")
     
-    def _gerar_relatorio_texto(self):
+    # NOVO: Método para verificar alinhamento com prioridades
+    def _verificar_prioridades(self):
+        """Verifica se a oportunidade atende às prioridades pessoais"""
+        prioridades = [
+            self.valores_pessoais.get('prioridade_1', ''),
+            self.valores_pessoais.get('prioridade_2', ''),
+            self.valores_pessoais.get('prioridade_3', '')
+        ]
+        
+        # Verificar cada prioridade
+        atendidas = 0
+        
+        for prioridade in prioridades:
+            if prioridade == 'Estabilidade Financeira':
+                if self.fatores.get('estabilidade', 0) >= 7:
+                    atendidas += 1
+            elif prioridade == 'Flexibilidade de Tempo':
+                if self.fatores.get('dias_presencial_novo', 0) <= 2:
+                    atendidas += 1
+            elif prioridade == 'Crescimento na Carreira':
+                if self.fatores.get('crescimento_carreira', 0) >= 7:
+                    atendidas += 1
+            elif prioridade == 'Equilíbrio Vida Pessoal':
+                if self.fatores.get('tempo_viagem_novo', 0) <= 1.0:
+                    atendidas += 1
+            # Adicionar outras condições conforme necessário
+            
+        return atendidas >= 2  # Atende pelo menos 2 das 3 prioridades
+    
+    def _gerar_relatorio_texto(self, compatibilidade):
         """Gera relatório completo em texto"""
         try:
             faixa = self.calcular_faixa_recomendada()
@@ -783,11 +1328,20 @@ SITUAÇÃO ATUAL:
 - Total atual: R$ {self.fatores.get('salario_atual', 0) + self.fatores.get('beneficios_atual', 0):,.2f}
 - Tempo deslocamento: {self.fatores.get('tempo_viagem_atual', 0)}h/dia
 
+SEU PERFIL DE VALORES:
+- Prioridade 1: {self.valores_pessoais.get('prioridade_1', 'Não definida')}
+- Prioridade 2: {self.valores_pessoais.get('prioridade_2', 'Não definida')}
+- Prioridade 3: {self.valores_pessoais.get('prioridade_3', 'Não definida')}
+- Compatibilidade geral: {compatibilidade['compatibilidade_geral']:.1f}%
+
 NOVA OPORTUNIDADE:
 - Modalidade: {modalidade}
 - Custo de vida: {self.fatores.get('custo_vida_nova', 0)*100:.1f}%
 - Dias presenciais: {self.fatores.get('dias_presencial_novo', 0)}/semana
 - Novo deslocamento: {self.fatores.get('tempo_viagem_novo', 0)}h/dia
+- Avaliação crescimento: {self.fatores.get('crescimento_carreira', 0)}/10
+- Avaliação estabilidade: {self.fatores.get('estabilidade', 0)}/10
+- Avaliação cultura: {self.fatores.get('cultura_empresa_nova', 0)}/10
 
 VALORES RECOMENDADOS - {modalidade}:
 - Mínimo aceitável: R$ {faixa['minimo'] if modalidade == 'CLT' else self.calcular_equivalencia_pj_clt(faixa['minimo']):,.2f}
@@ -799,15 +1353,18 @@ COMPARAÇÃO CLT vs PJ:
 - PJ Líquido: R$ {comparacao['PJ'].get('renda_liquida', 0):,.2f}
 - Diferença: R$ {comparacao['PJ'].get('renda_liquida', 0) - comparacao['CLT'].get('salario_liquido', 0):,.2f}
 
-FATORES QUALITATIVOS:
-- Crescimento: {self.fatores.get('crescimento_carreira', 0)}/10
-- Estabilidade: {self.fatores.get('estabilidade', 0)}/10  
-- Benefícios: {self.fatores.get('beneficios_qualidade', 0)}/10
+ANÁLISE DE COMPATIBILIDADE:
+- Compatibilidade geral: {compatibilidade['compatibilidade_geral']:.1f}%
+- Estabilidade financeira: {compatibilidade['detalhado'].get('estabilidade_financeira', 0):.1f}%
+- Crescimento carreira: {compatibilidade['detalhado'].get('crescimento_carreira', 0):.1f}%
+- Flexibilidade tempo: {compatibilidade['detalhado'].get('flexibilidade_tempo', 0):.1f}%
+- Equilíbrio vida: {compatibilidade['detalhado'].get('equilibrio_vida_pessoal', 0):.1f}%
 
 RECOMENDAÇÕES:
 - Estratégia de negociação: Buscar R$ {faixa['ideal'] if modalidade == 'CLT' else self.calcular_equivalencia_pj_clt(faixa['ideal']):,.2f}
 - Contraproposta mínima: R$ {faixa['minimo'] if modalidade == 'CLT' else self.calcular_equivalencia_pj_clt(faixa['minimo']):,.2f}
 - {'Considerar CLT se oferecerem benefícios equivalentes' if modalidade == 'PJ' else 'Considerar PJ se oferecerem valor equivalente'}
+- {'Aceitar com menor salário se compatibilidade for alta' if compatibilidade['compatibilidade_geral'] > 80 else 'Exigir compensação maior se compatibilidade for baixa'}
             """
             return relatorio
         except Exception as e:
@@ -837,25 +1394,52 @@ def main():
         border-radius: 10px;
         border-left: 4px solid #1f77b4;
     }
+    .valores-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
     </style>
     """, unsafe_allow_html=True)
     
     st.title("🧮 Calculadora de Proposta Salarial - Completa")
-    st.markdown("### Análise completa com comparação CLT vs PJ e cálculos fiscais")
+    st.markdown("### Análise completa com valores pessoais, comparação CLT/PJ e cálculos fiscais")
+    
+    # NOVO: Seção de introdução sobre valores
+    st.markdown("""
+    <div class="valores-section">
+    <h3>🎯 Conheça Seus Valores para Tomar Melhores Decisões</h3>
+    <p>Esta calculadora agora inclui uma análise dos seus <strong>valores pessoais</strong> para ajudar a encontrar oportunidades que realmente façam sentido para você, além do aspecto financeiro.</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Inicializar calculadora
     calculadora = CalculadoraPropostaCompleta()
     
-    # Coletar dados
-    with st.form("dados_principais"):
+    # Coletar dados em abas
+    tab1, tab2, tab3 = st.tabs(["📊 Situação Atual", "🚀 Nova Oportunidade", "🎯 Meus Valores"])
+    
+    with tab1:
         calculadora.coletar_dados_atual()
+    
+    with tab2:
         calculadora.coletar_expectativas()
-        
-        submitted = st.form_submit_button("🎯 Calcular Análise Completa", type="primary")
+    
+    with tab3:
+        calculadora.coletar_valores_pessoais()
+    
+    # Botão para calcular
+    st.markdown("---")
+    if st.button("🎯 Calcular Análise Completa", type="primary", use_container_width=True):
+        with st.spinner("Analisando dados e calculando recomendações..."):
+            calculadora.gerar_dashboard()
     
     # Mostrar resultados mesmo sem submit para dados persistidos
-    if submitted or any(calculadora.fatores.values()):
-        calculadora.gerar_dashboard()
+    if any(calculadora.fatores.values()) or any(calculadora.valores_pessoais.values()):
+        if st.button("📈 Ver Dashboard Existente", key="ver_dashboard_existente"):
+            calculadora.gerar_dashboard()
 
 if __name__ == "__main__":
     main()
